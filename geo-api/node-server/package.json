@@ -1,0 +1,15 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "backpack"
+  },
+  "author": "Connor Couetil",
+  "license": "ISC",
+  "dependencies": {
+    "backpack-core": "^0.7.0"
+  }
+}
