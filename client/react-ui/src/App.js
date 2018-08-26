@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import { BrowserRouter, Route, Link } from 'react-router-dom';
 import twemoji from 'twemoji';
-import logo from './logo.svg';
+import back_arrow from './backspace-arrow.png';
 import './App.css';
 import './twemoji-awesome.css';
 import emoji_list from './emoji-list.js';
 import io from 'socket.io-client';
 
+let LAST_DISTANCE = Infinity;
+let CURRENT_EMOJI = "twa-heart";
 let POLO = ["","",""];
 let MARCO = [
     emoji_list.emojis.length,
@@ -14,6 +16,7 @@ let MARCO = [
     emoji_list.emojis.length,
 ].map(ceil => getRandomInt(ceil))
  .map(idx => emoji_list.emojis[idx].twa);
+console.log(MARCO);
 
 function getRandomInt(ceiling) {
     return Math.floor(Math.random() * ceiling);
@@ -29,10 +32,6 @@ const code2twa = emoji_list.emojis.reduce((accumulator, emoji) => {
 }, {});
 
 const socket = io('http://localhost:4444');
-socket.on('news', data => {
-    console.log(data);
-    socket.emit('', { my: 'data' });
-});
 
 class App extends Component {
     render() {
@@ -103,6 +102,7 @@ class MarcoPage extends Component {
 
         this.logPosition = this._logPosition.bind(this);
         this.noLocation = this._noLocation.bind(this);
+        this.showDistance = this._showDistance.bind(this);
 
         this.geoparam = {
             enableHighAccuracy: true,
@@ -112,10 +112,49 @@ class MarcoPage extends Component {
 
         this.watchId = navigator.geolocation
             .watchPosition(this.logPosition,this.noLocation,this.geoparam);
+
+        POLO = props.location.search.replace("?polo=", "").split(',')
+            .map(code => code2twa[code]);
+        socket.emit('polo', { 
+            polo: POLO.map(twa => twa2code[twa]).join(':'), 
+            marco: MARCO
+         });
+
+        socket.on('distance', message => {
+            console.log('got distance');
+            this.showDistance(message.distance);
+        });
     }
 
     componentWillUnmount() {
         navigator.geolocation.clearWatch(this.state.watchId);
+    }
+
+    _showDistance(new_distance) {
+        const change = LAST_DISTANCE - new_distance;
+        console.log(change);
+        LAST_DISTANCE = new_distance;
+        if (change > 0) {
+            //got closer
+            if (document.getElementById("colorpad")) {
+                document.getElementById("colorpad").style.backgroundColor = "red";
+            }
+            setTimeout(() =>  {
+                if (document.getElementById("colorpad")) {
+                    document.getElementById("colorpad").style.backgroundColor = "white";
+                }
+            }, 2000);
+        } else {
+            //got farther away.
+            if (document.getElementById("colorpad")) {
+                document.getElementById("colorpad").style.backgroundColor = "blue";
+            }
+            setTimeout(() =>  {
+                if (document.getElementById("colorpad")) {
+                    document.getElementById("colorpad").style.backgroundColor = "white";
+                }
+            }, 2000);
+        }
     }
 
     _logPosition(position) {
@@ -128,7 +167,9 @@ class MarcoPage extends Component {
         });
         console.log(position);
         this.setState((prevState, props) => {
+            prevState.isTracking = true;
             prevState.isCloser = true;
+            return prevState;
         });
     }
 
@@ -143,19 +184,59 @@ class MarcoPage extends Component {
     render() {
         return (
         <div className="page">
-            <div>Marco Page!</div>
-            <Link to="/">Go to home.</Link>
-            <div>{this.props.location.search}</div>
-            <MarcoDisplay />
+            <div className="connectmsg">
+                <span>Connecting with </span>
+                <i id="polo-1" className={"polo-icon twa twa-2x " + POLO[0]} />
+                <i id="polo-2" className={"polo-icon twa twa-2x " + POLO[1]} />
+                <i id="polo-3" className={"polo-icon twa twa-2x " + POLO[2]} />
+            </div>
+            <Link id="gohome" to="/">Return Home</Link>
+            <MarcoDisplay isCloser={this.state.isCloser} isTracking={this.state.isTracking} />
         </div>);
     }
 }
 
 class MarcoDisplay extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            style: {
+                "backgroundColor": props.isTracking ?
+                    (props.isCloser ? "red" : "blue"):
+                    "white"
+            },
+            showemoji: ""
+        };
+    }
+
+    componentDidMount() {
+        document.getElementById("colorpad")
+            .addEventListener("click", () => {
+                socket.emit('emoji', { 
+                    emoji: CURRENT_EMOJI,
+                    polo: POLO.map(twa => twa2code[twa]).join(':'), 
+
+                });
+            });
+        socket.on('emojidisplay', data => {
+            if (document.getElementById("emoji-shower")) {
+                this.setState((prevState, props) => {
+                    prevState.showemoji = data.emoji;
+                });
+            }
+        });
+    }
+
+    copmonentWillUnmount() {
+        const el = document.getElementById("colorpad");
+        const elClone = el.cloneNode(true);
+        el.parentNode.replaceChild(elClone, el);
+    }
+
     render() {
         return (
-        <div className="marco-display">
-
+        <div id="colorpad" className="marco-display" style={this.state.style}>
+            <i id="emoji-shower" className={"twa twa-3x "+this.state.showemoji} />
         </div>);
     }
 }
@@ -184,6 +265,7 @@ class Connect extends Component {
     render() {
         return (
         <div className="connect button">
+            <span>You are </span>
             <i id="marco-1" className={"marco-icon twa twa-2x " + MARCO[0]} />
             <i id="marco-2" className={"marco-icon twa twa-2x " + MARCO[1]} />
             <i id="marco-3" className={"marco-icon twa twa-2x " + MARCO[2]} />
@@ -202,15 +284,18 @@ class PoloSearch extends Component {
 
     render() {
         return (
-        <form className="searchbox">
-            <i id="polo-1" className={"polo-icon twa twa-2x " + this.state.icons[0]} />
-            <i id="polo-2" className={"polo-icon twa twa-2x " + this.state.icons[1]} />
-            <i id="polo-3" className={"polo-icon twa twa-2x " + this.state.icons[2]} />
-            <div onClick={() => this.state.backspace()}>X Delete</div>
-            <Link to={"/marco?polo="+ this.state.icons.map(twa => twa2code[twa])}>
-                Marco!
-            </Link>
-        </form>);
+        <div className="search">
+            <div className="searchtitle">Connect with your Polo</div>
+            <form className="searchbox">
+                <i id="polo-1" className={"polo-icon twa twa-3x " + this.state.icons[0]} />
+                <i id="polo-2" className={"polo-icon twa twa-3x " + this.state.icons[1]} />
+                <i id="polo-3" className={"polo-icon twa twa-3x " + this.state.icons[2]} />
+                <img id="backspace" src={back_arrow} onClick={() => this.state.backspace()} />
+                <Link id="marco-button" to={"/marco?polo="+ this.state.icons.map(twa => twa2code[twa])}>
+                    Marco!
+                </Link>
+            </form>
+        </div>);
     }
 }
 
@@ -236,7 +321,7 @@ class EmojiDisplay extends Component {
         return emoji_list.emojis
             .map((emoji, idx) => <i 
                 key={idx} 
-                className={"twa " + emoji.twa + " twa-2x"} 
+                className={"twa " + emoji.twa + " twa-3x"} 
                 onClick={() => this.updateEmoji(emoji.twa)}
             />);
     }

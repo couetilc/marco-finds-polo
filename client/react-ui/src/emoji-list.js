@@ -65,5 +65,11 @@ export default {
         "codepoint": "1F602",
         "twa": "twa-joy",
         "shortcode": ":joy:"
+    },{
+        "name": "victory hand",
+        "character": "",
+        "codepoint": "270C",
+        "twa": "twa-v",
+        "shortcode": ":v:"
     }]
 }

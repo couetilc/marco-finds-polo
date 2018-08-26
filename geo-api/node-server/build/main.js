@@ -86,7 +86,10 @@ const port = process.env.PORT || 4444;
 const aws = __webpack_require__(6);
 const db = new aws.DynamoDB({ region: 'us-east-1' });
 
-function getPositionParam(data) {
+let POLO = [];
+let MARCO = [];
+
+function putPositionParam(data) {
     return {
         TableName: "marcos",
         Item: {
@@ -98,15 +101,24 @@ function getPositionParam(data) {
     };
 };
 
+function getPositionParam(data) {
+    return {
+        TableName: "marcos",
+        Key: {
+            "id": { S: data.polo.toString() }
+        }
+    };
+}
+
+function getDistance(p1, p2) {
+    const distX = p1.latitude - p2.latitude;
+    const distY = p1.longitude - p2.longitude;
+    const distance = Math.sqrt(distX * distX + distY * distY);
+    return distance;
+}
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-/*app.use(function (req, res, next) {
-        res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
-        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept-Type');
-        res.header('Access-Control-Allow-Credentials', 'true');
-        res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-        next();
-});*/
 
 app.get('/', (req, res) => res.send());
 
@@ -123,22 +135,45 @@ app.post('/emoji', (req, res) => {
 io.on('connection', socket => {
     socket.on('emoji', data => {
         console.log(data);
+        io.to(POLO).emit('showemoji', data);
     });
     socket.on('position', data => {
-        const param = getPositionParam(data);
+        let param = putPositionParam(data);
+        POLO = data.polo;
+        socket.join(data.marco);
 
-        console.log(data);
-        console.log(param);
-
-        db.putItem(param, (error, data) => {
+        db.putItem(param, (error, result) => {
             if (error) {
                 console.log(error);
             } else {
-                console.log(data);
+                const marco_data = data;
+                param = getPositionParam(data);
+                db.getItem(param, (error, result) => {
+                    if (error || !result.Item) {
+                        console.log("error:", error, result);
+                    } else {
+                        const polo_response = result;
+                        const distance = getDistance({
+                            latitude: parseFloat(marco_data.latitude),
+                            longitude: parseFloat(marco_data.longitude)
+                        }, {
+                            latitude: parseFloat(polo_response.Item.latitude.S),
+                            longitude: parseFloat(polo_response.Item.longitude.S)
+                        });
+
+                        socket.emit('distance', { "distance": distance });
+                    }
+                });
             }
         });
     });
     socket.on('marcopolo', data => {
+        console.log(data);
+    });
+    socket.on('polo', data => {
+        POLO = data.polo;
+        MARCO = data.marco;
+        console.log('polo event');
         console.log(data);
     });
 });

@@ -37,7 +37,8 @@ table {
 /* App styles */
 #root {
     width: 100%;
-    height: 100%;
+    height: 500px;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 .window {
@@ -51,27 +52,109 @@ table {
 .page {
     max-width: 1024px;
     width: 100%;
+    height: 100%;
     display: flex;
     flex-flow: column nowrap;
+    align-items: center;
+    background-color: #9C2466;
 }
 
 .home-banner {
     display: flex;
-    flex-flow: row nowrap;
+    flex-flow: column nowrap;
     justify-content: space-between;
-    background-color: green;
+    background-color: #40AC47;
+    align-items: center;
+    width: 100%;
+}
+
+.logo {
+    font-size: 2.25em;
+    margin: .25em 0em;
+}
+
+.connect {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    margin: 0em 0em .5em 0em;
+}
+
+.connect > span {
+    font-size: 1.25em;
+}
+
+.search {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    background-color: #9C2466;
+}
+
+.searchtitle {
+    font-size: 1.25em;
+    padding: .25em 0em;
+    background-color: #7B0F4A;
+    width: 100%;
+    text-align: center;
 }
 
 .searchbox {
     display: flex;
     flex-flow: row nowrap;
-    background-color: purple;
+    background-color: #9C2466;
+    padding: .5em;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#backspace {
+    width: 2em;
+    height: 2em;
+    margin: 0em .5em;
+}
+
+#marco-button {
+    background-color: blue;
+    font-size: 2em;
+    text-decoration: none;
+    color: red;
 }
 
 .emoji-display {
     width: 100%;
-    height: 100%;
-    background-color: yellow;
+    max-width: 16em;
+    background-color: #E299C1;
+}
+
+.emoji-display > i {
+    margin: .5em;
+}
+
+#colorpad {
+    transition: all 2s;
+    width: 100%;
+    height: 20rem;
+}
+
+.connectmsg {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    margin: .5em 0em;
+}
+
+.connectmsg > span {
+    font-size: 1.5em;
+}
+
+#gohome {
+    padding: .5rem .5rem;
+    width: 100%;
+    text-align: center;
+    font-size: 1.25rem;
+    background-color: #DB5551;
+    color: #981613;
 }
 
 @media all and (min-width: 320px) {
