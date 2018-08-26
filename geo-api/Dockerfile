@@ -7,7 +7,7 @@ WORKDIR $HOME
 ENV PATH $HOME/node_modules/.bin:$PATH
 
 COPY node-server/package.json $HOME/package.json
-RUN npm install --silent
+RUN npm install 
 COPY node-server/ $HOME
 
 CMD ["npm", "run", "dev"]

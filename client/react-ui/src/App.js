@@ -5,6 +5,19 @@ import logo from './logo.svg';
 import './App.css';
 import './twemoji-awesome.css';
 import emoji_list from './emoji-list.js';
+import io from 'socket.io-client';
+
+let POLO = ["","",""];
+let MARCO = [
+    emoji_list.emojis.length,
+    emoji_list.emojis.length,
+    emoji_list.emojis.length,
+].map(ceil => getRandomInt(ceil))
+ .map(idx => emoji_list.emojis[idx].twa);
+
+function getRandomInt(ceiling) {
+    return Math.floor(Math.random() * ceiling);
+}
 
 const twa2code = emoji_list.emojis.reduce((accumulator, emoji) => {
     accumulator[emoji.twa] = emoji.codepoint;      
@@ -14,6 +27,12 @@ const code2twa = emoji_list.emojis.reduce((accumulator, emoji) => {
     accumulator[emoji.codepoint] = emoji.twa;
     return accumulator;
 }, {});
+
+const socket = io('http://localhost:4444');
+socket.on('news', data => {
+    console.log(data);
+    socket.emit('', { my: 'data' });
+});
 
 class App extends Component {
     render() {
@@ -29,7 +48,7 @@ class HomePage extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            icons: ["","",""],
+            icons: POLO,
             iconCurrent: 0,
             iconMax: 3
         }
@@ -48,7 +67,6 @@ class HomePage extends Component {
     }
 
     _updateIcon(emoji) {
-        console.log('updating ' + emoji + " at " + this.state.iconCurrent);
         this.setState((prevState, props) => {
             if (prevState.iconCurrent < prevState.iconMax) {
                 prevState.icons[prevState.iconCurrent] = emoji;
@@ -101,7 +119,13 @@ class MarcoPage extends Component {
     }
 
     _logPosition(position) {
-        //XHR to node-api to get distance
+        socket.emit('position', {
+            marco: MARCO.map(twa => twa2code[twa]).join(':'), 
+            polo: POLO.map(twa => twa2code[twa]).join(':'), 
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            timestamp: position.timestamp
+        });
         console.log(position);
         this.setState((prevState, props) => {
             prevState.isCloser = true;
@@ -160,7 +184,9 @@ class Connect extends Component {
     render() {
         return (
         <div className="connect button">
-            connect
+            <i id="marco-1" className={"marco-icon twa twa-2x " + MARCO[0]} />
+            <i id="marco-2" className={"marco-icon twa twa-2x " + MARCO[1]} />
+            <i id="marco-3" className={"marco-icon twa twa-2x " + MARCO[2]} />
         </div>);
     }
 }
@@ -177,9 +203,9 @@ class PoloSearch extends Component {
     render() {
         return (
         <form className="searchbox">
-            <i id="icon-1" className={"name-icon twa twa-2x " + this.state.icons[0]} />
-            <i id="icon-2" className={"name-icon twa twa-2x " + this.state.icons[1]} />
-            <i id="icon-3" className={"name-icon twa twa-2x " + this.state.icons[2]} />
+            <i id="polo-1" className={"polo-icon twa twa-2x " + this.state.icons[0]} />
+            <i id="polo-2" className={"polo-icon twa twa-2x " + this.state.icons[1]} />
+            <i id="polo-3" className={"polo-icon twa twa-2x " + this.state.icons[2]} />
             <div onClick={() => this.state.backspace()}>X Delete</div>
             <Link to={"/marco?polo="+ this.state.icons.map(twa => twa2code[twa])}>
                 Marco!

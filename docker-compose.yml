@@ -23,9 +23,11 @@ services:
             dockerfile: Dockerfile
         volumes:
             - './geo-api/node-server:/home/node-server/'
-            - './home/node-server/node_modules'
+            - '/home/node-server/node_modules'
         ports:
             - '4444:4444'
+        expose:
+            - 4444
         env_file: ./geo-api/.env
         environment:
             NODE_ENV: 'development'
