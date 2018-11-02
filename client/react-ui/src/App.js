@@ -80,8 +80,35 @@ class HomePage extends Component {
     render() {
         return (
         <div className="page">
-            <HomeBanner />
-            <PoloSearch icons={this.state.icons} backspace={this.backspace} />
+            <div className="home-banner">
+                <div className="logo">
+                    <span style={{"color": "red"}}>MARCO</span>
+                    <span>finds</span>
+                    <span style={{"color": "blue"}}>POLO</span>
+                </div>
+
+                <div className="connect button">
+                    <span>You are </span>
+                    <i id="marco-1" className={"marco-icon twa twa-2x " + MARCO[0]} />
+                    <i id="marco-2" className={"marco-icon twa twa-2x " + MARCO[1]} />
+                    <i id="marco-3" className={"marco-icon twa twa-2x " + MARCO[2]} />
+                </div>
+            </div>
+
+            <div className="search">
+                <div className="searchtitle">Connect with your Polo</div>
+                <form className="searchbox">
+                    <i id="polo-1" className={"polo-icon twa twa-3x " + this.state.icons[0]} />
+                    <i id="polo-2" className={"polo-icon twa twa-3x " + this.state.icons[1]} />
+                    <i id="polo-3" className={"polo-icon twa twa-3x " + this.state.icons[2]} />
+                    <img id="backspace" src={back_arrow} onClick={() => this.state.backspace()} />
+                    <Link id="marco-button" to={"/marco?polo="+ this.state.icons.map(twa => twa2code[twa])}>
+                        Marco!
+                    </Link>
+                </form>
+            </div>
+
+
             <EmojiDisplay 
                 update={this.updateIcon} 
                 iconCurrent={this.state.iconCurrent}
